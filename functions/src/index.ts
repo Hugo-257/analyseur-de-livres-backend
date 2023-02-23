@@ -10,23 +10,21 @@ app.use(bodyParser.json());
 app.use(cors({ origin: true }));
 
 const configuration = new Configuration({
-	apiKey: "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",
+	apiKey: process.env.OPENAI_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
 app.get("/test", (req: Request, res: Response) => {
-	res.send({ message: "Hello world" });
+	res.send({ message: "Yes the api is working" });
 });
 
 app.get("/models", async (req: Request, res: Response) => {
 	const result = (await openai.listModels()).data;
-
 	res.send(result);
 });
 
 app.post("/getWinnerSections", async (req: Request, res: Response) => {
 	console.log(req.body.sections);
-
 	try {
 		let prompt =
 			"Retourne les numeros des sections qui indiquent une fin avec victoire: ";
@@ -40,7 +38,7 @@ app.post("/getWinnerSections", async (req: Request, res: Response) => {
 			prompt: prompt,
 			max_tokens: 2048,
 		});
-		
+
 		let choicesString = completion.data.choices[0].text?.trim();
 
 		const result = {
@@ -56,17 +54,17 @@ app.post("/getWinnerSections", async (req: Request, res: Response) => {
 });
 
 app.post("/queryDavinci", async (req: Request, res: Response) => {
+	console.log(req.body);
 
 	try {
-		
 		let { prompt } = req.body;
-
-		const quest= "Réponds si oui ou non si c'est une  fin avec victoire : \n" + prompt;
+		const quest =
+			"Réponds si oui ou non si c'est une  fin avec victoire : \n" + prompt;
 
 		const completion = await openai.createCompletion({
 			model: "text-davinci-003",
 			prompt: quest,
-			max_tokens: 2048,
+			max_tokens: 1000,
 		});
 
 		const result = {
@@ -78,7 +76,8 @@ app.post("/queryDavinci", async (req: Request, res: Response) => {
 
 		res.send(result);
 	} catch (e) {
-		res.status(400);
+		res.status(500);
+		console.error(e);
 		res.send({ error: (e as Error).message });
 	}
 });
